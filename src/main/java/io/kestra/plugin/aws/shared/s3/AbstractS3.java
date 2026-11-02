@@ -41,14 +41,15 @@ public interface AbstractS3 extends AbstractConnectionInterface {
 
     default S3AsyncClient asyncClient(final RunContext runContext) throws IllegalVariableEvaluationException {
         final AbstractConnection.AwsClientConfig clientConfig = awsClientConfig(runContext);
+        final boolean forcePathStyle = runContext.render(this.getForcePathStyle()).as(Boolean.class).orElse(false);
         if (runContext.render(this.getCompatibilityMode()).as(Boolean.class).orElse(false)) {
             return ConnectionUtils.configureAsyncClient(clientConfig, S3AsyncClient.builder())
-                .forcePathStyle(runContext.render(this.getForcePathStyle()).as(Boolean.class).orElse(false))
+                .forcePathStyle(forcePathStyle)
                 .build();
         } else {
             S3CrtAsyncClientBuilder s3ClientBuilder = S3AsyncClient.crtBuilder()
                 .credentialsProvider(ConnectionUtils.credentialsProvider(clientConfig))
-                .forcePathStyle(runContext.render(this.getForcePathStyle()).as(Boolean.class).orElse(false));
+                .forcePathStyle(forcePathStyle);
 
             if (clientConfig.region() != null) {
                 s3ClientBuilder.region(Region.of(clientConfig.region()));
@@ -60,6 +61,5 @@ public interface AbstractS3 extends AbstractConnectionInterface {
             }
             return s3ClientBuilder.build();
         }
-
     }
 }
